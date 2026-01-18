@@ -9,7 +9,9 @@ from app.core.models import Model
 from app.core.config import settings
 
 from app.hotels.models import Hotel
+from app.hotels.rooms.models import Rooms
 from app.users.models import User
+from app.bookings.models import Bookings
 
 from sqlalchemy.ext.asyncio import async_engine_from_config
 import asyncio

@@ -13,9 +13,13 @@ class Settings(BaseSettings):
         NEW_PASS = quote_plus(str(self.DB_PASSWORD))
         return f'postgresql+asyncpg://{self.DB_USER}:{NEW_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
     
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    
     model_config = SettingsConfigDict(
         env_file='.env',
         extra='ignore'
     )
     
-settings = Settings()
+settings = Settings() # type: ignore

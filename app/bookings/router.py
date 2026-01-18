@@ -4,10 +4,11 @@ from app.dependencies import get_current_user
 from app.users.models import User
 from fastapi import Depends, HTTPException, status
 from app.bookings.dao import BookingDAO
+from app.bookings.schemas import SBooking
 
 router = APIRouter(prefix='/bookings', tags=['Бронирования'])
 
-@router.post('')
+@router.post('add')
 async def booking(room_id: int, date_from: date, date_to: date, user: User = Depends(get_current_user)):
     if date_from >= date_to:
         raise HTTPException(
@@ -29,3 +30,7 @@ async def booking(room_id: int, date_from: date, date_to: date, user: User = Dep
         )
         
     return room
+
+@router.get('', response_model=list[SBooking])
+async def get_all_bookings(user: User = Depends(get_current_user)):
+    return await BookingDAO.find_all(user_id = user.id)

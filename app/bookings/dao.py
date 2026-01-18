@@ -1,5 +1,6 @@
 from datetime import date
 from sqlalchemy import select, func, and_, or_, insert
+from sqlalchemy.orm import selectinload
 from app.bookings.models import Bookings
 from app.hotels.rooms.models import Rooms
 from app.dao.base import BaseDAO
@@ -7,6 +8,13 @@ from app.core.database import new_session
 
 class BookingDAO(BaseDAO):
     model = Bookings
+    
+    @classmethod
+    async def find_all(cls, **filter_by):
+        async with new_session() as session:
+            query = select(cls.model).filter_by(**filter_by)
+            result = await session.execute(query)
+            return result.scalars().all()
     
     @classmethod
     async def add(
@@ -43,12 +51,12 @@ class BookingDAO(BaseDAO):
             
             result = await session.execute(get_rooms_left)
             
-            rooms_left: int = result.scalar()
+            rooms_left: int = result.scalar() #type: ignore
             
             if rooms_left > 0:
                 get_price = select(Rooms.price).filter_by(id=room_id)
                 price_res = await session.execute(get_price)
-                price: int = price_res.scalar()
+                price: int = price_res.scalar() #type: ignore
                 
                 add_booking = (
                     insert(Bookings)

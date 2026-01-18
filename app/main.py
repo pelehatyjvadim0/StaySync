@@ -16,7 +16,10 @@ async def lifespan(app: FastAPI):
     
         print('Выключение сервера!')
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan,
+              title='StaySync',
+              version='1.0',
+              description='Сервис бронирования номеров')
 
 app.include_router(HotelRouter)
 app.include_router(UserRouter)

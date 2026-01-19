@@ -6,6 +6,10 @@ class SUserAuth(BaseModel):
     
     model_config = ConfigDict(from_attributes=True)
     
+class SUserAuthTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = 'bearer'
+    
 class SUserRead(BaseModel):
     id: int
     email: EmailStr

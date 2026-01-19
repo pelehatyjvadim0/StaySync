@@ -4,3 +4,4 @@ from fastapi import status
 # Номер нельзя забронировать
 class RoomCannotBeBookedException(StaySyncException):
     status_code=status.HTTP_409_CONFLICT
+    message = 'Не осталось свободных номеров для бронирования!'

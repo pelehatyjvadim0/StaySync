@@ -11,13 +11,12 @@ class BookingService:
         return [SBookingResponse.model_validate(booking) for booking in bookings]
     
     @classmethod
-    async def add_booking(cls, user_id: int, booking: SBookingAdd) -> SBookingResponse:
-        booking_add = await BookingDAO.add(user_id=user_id,
-                                           **booking.model_dump())
+    async def add_booking(cls, user_id: int, booking_data: SBookingAdd) -> SBookingResponse:
+        new_booking = await BookingDAO.add(user_id=user_id,
+                                           **booking_data.model_dump())
         
-        if booking_add is None:
+        if new_booking is None:
             raise RoomCannotBeBookedException()
         
-        return SBookingResponse.model_validate(booking_add)
+        return SBookingResponse.model_validate(new_booking)
             
-    

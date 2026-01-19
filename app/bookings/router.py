@@ -1,8 +1,7 @@
 from fastapi import APIRouter
-from datetime import date, datetime, timezone
 from app.dependencies import get_current_user
 from app.users.models import User
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from app.bookings.schemas import SBookingResponse, SBookingAdd
 from app.tasks.tasks import send_email
 from app.core.redis import cache_response
@@ -13,7 +12,7 @@ router = APIRouter(prefix='/bookings', tags=['Бронирования'])
 @router.post('add', response_model=SBookingResponse)
 async def booking(booking_info: SBookingAdd, user: User = Depends(get_current_user)):
     
-    booking = await BookingService.add_booking(user_id=user.id, booking=booking_info)
+    booking = await BookingService.add_booking(user_id=user.id, booking_data=booking_info)
     
     send_email.delay(booking.model_dump(), user.email)
         

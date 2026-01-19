@@ -3,40 +3,23 @@ from datetime import date, datetime, timezone
 from app.dependencies import get_current_user
 from app.users.models import User
 from fastapi import Depends, HTTPException, status
-from app.bookings.dao import BookingDAO
-from app.bookings.schemas import SBooking
+from app.bookings.schemas import SBookingResponse, SBookingAdd
 from app.tasks.tasks import send_email
+from app.core.redis import cache_response
+from app.bookings.service import BookingService
 
 router = APIRouter(prefix='/bookings', tags=['Бронирования'])
 
-@router.post('add')
-async def booking(room_id: int, date_from: date, date_to: date, user: User = Depends(get_current_user)):
-    if date_from >= date_to:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Дата заезда должна быть раньше даты выезда!'
-        )
+@router.post('add', response_model=SBookingResponse)
+async def booking(booking_info: SBookingAdd, user: User = Depends(get_current_user)):
     
-    room = await BookingDAO.add(
-        user_id=user.id,
-        room_id=room_id,
-        date_from=date_from,
-        date_to=date_to
-    )
+    booking = await BookingService.add_booking(user_id=user.id, booking=booking_info)
     
-    if room is None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail='Упс, свободых номеров нет!'
-        )
-    
-    booking_pydantic = SBooking.model_validate(room)
-    booking_dict = booking_pydantic.model_dump()
+    send_email.delay(booking.model_dump(), user.email)
         
-    send_email.delay(booking_dict, user.email)
-        
-    return booking_dict
+    return booking
 
-@router.get('', response_model=list[SBooking])
+@router.get('', response_model=list[SBookingResponse])
+@cache_response(expire=60, model=SBookingResponse)
 async def get_all_bookings(user: User = Depends(get_current_user)):
-    return await BookingDAO.find_all(user_id = user.id)
+    return await BookingService.get_all_user_bookings(user_id=user.id)

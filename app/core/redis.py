@@ -8,8 +8,10 @@ import json
 from typing import Any
 from datetime import date, datetime
 
-redis_pool = aioredis.ConnectionPool.from_url(f'redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}', decode_response = True)
-client = aioredis.Redis(connection_pool=redis_pool)
+from app.core.models import Model
+
+redis_pool = aioredis.ConnectionPool.from_url(f'redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}')
+client = aioredis.Redis(connection_pool=redis_pool, decode_responses=True)
 
 
 # Генератор ключей для кеширования в Redis
@@ -59,7 +61,7 @@ def json_serial(obj):
 # expire - время жизни ключа в базе redis, указывается в секундах, по умолчанию 60 секунд.
 # model - модель pydantic-схемы, обязательна для безопасности работы приложения и защиты от ошибок, обязательно указывайте pydantic схему ответа
 # при установке докератора на эндпоинт в роутере
-def cache_response(expire: int = 60, model: Any): #type: ignore
+def cache_response(expire: int = 60, model: Any = None): #type: ignore
     def decorator(func):
         # wraps обязательно используем для сохранения сигнатуры главной функции роутера
         @wraps(func)
@@ -77,7 +79,6 @@ def cache_response(expire: int = 60, model: Any): #type: ignore
                 if cache_json is not None:
                     cache_data = json.loads(cache_json)
                     
-                    # модель всегда обязательна, но тут я указал себе для явности, может потом и уберу обязательное заполнение модели.
                     # проверяем на соответствие типов, если получили список словарей, проходимся по словарям циклом, валидируя в pydantic схему переданную в model
                     # если получули одиночный словарь, валидируем его сразу в pydantic схему
                     if model:

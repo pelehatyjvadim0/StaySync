@@ -12,7 +12,7 @@ class BookingDAO(BaseDAO):
     @classmethod
     async def find_all(cls, **filter_by):
         async with new_session() as session:
-            query = select(cls.model).filter_by(**filter_by)
+            query = select(cls.model).filter_by(**filter_by).options(selectinload(cls.model.room))
             result = await session.execute(query)
             return result.scalars().all()
     
@@ -53,7 +53,7 @@ class BookingDAO(BaseDAO):
             
             rooms_left: int = result.scalar() #type: ignore
             
-            if rooms_left > 0:
+            if rooms_left is not None and rooms_left > 0:
                 get_price = select(Rooms.price).filter_by(id=room_id)
                 price_res = await session.execute(get_price)
                 price: int = price_res.scalar() #type: ignore

@@ -5,6 +5,7 @@ from app.users.models import User
 from fastapi import Depends, HTTPException, status
 from app.bookings.dao import BookingDAO
 from app.bookings.schemas import SBooking
+from app.tasks.tasks import send_email
 
 router = APIRouter(prefix='/bookings', tags=['Бронирования'])
 
@@ -28,8 +29,13 @@ async def booking(room_id: int, date_from: date, date_to: date, user: User = Dep
             status_code=status.HTTP_409_CONFLICT,
             detail='Упс, свободых номеров нет!'
         )
+    
+    booking_pydantic = SBooking.model_validate(room)
+    booking_dict = booking_pydantic.model_dump()
         
-    return room
+    send_email.delay(booking_dict, user.email)
+        
+    return booking_dict
 
 @router.get('', response_model=list[SBooking])
 async def get_all_bookings(user: User = Depends(get_current_user)):
